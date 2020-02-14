@@ -1,0 +1,19 @@
+#version 410
+
+in vec3 vert;
+in vec2 vertTexCoord;
+in vec3 verNormal;
+//in vec3 color;
+
+uniform mat4 MVP;
+
+out vec3 fragNormal;
+out vec2 fragTexCoord;
+//out vec3 outColor;
+
+void main() {
+gl_Position =  MVP * vec4(vert.x, vert.y, vert.z, 1.0) ;
+fragTexCoord = vertTexCoord;
+//outColor = color;
+fragNormal = verNormal;
+}

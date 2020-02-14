@@ -1,0 +1,47 @@
+#version 410
+
+out vec4 finalColor;
+
+uniform mat4 model;
+uniform vec3 color;
+uniform sampler2D tex;
+
+uniform struct Light {
+    vec3 position;
+    vec3 diffuse; //漫反射
+    vec3 ambient; //环境光
+    vec3 specular;  //镜面光
+} light;
+
+in vec3 fragNormal;
+in vec3 outColor;
+in vec3 fragVert;
+in vec2 fragTexCoord;
+
+void main() {
+    float ambient = 0.5;
+    vec3 ambientColor = ambient * light.ambient;  //环境光
+
+    mat3 normalMatrix = transpose(inverse(mat3(model)));  //法线矩阵
+
+    vec3 normal = normalize(normalMatrix * fragNormal);  //标准化的法向量
+    vec3 fragPosition = vec3(model * vec4(fragVert, 1));
+    vec3 surfaceToLight = normalize(light.position - fragPosition);
+    float brightness = dot(normal, surfaceToLight);
+    brightness = clamp(brightness, 0, 1);
+    vec3 diffuse = brightness*light.diffuse;//漫反射
+
+    //镜面反射
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(light.position - fragPosition);
+    vec3 reflectDir = reflect(normalize(fragPosition - light.position), normal);
+    float specness = max(dot(viewDir, reflectDir),0.0f);  //计算反射分量
+
+    float spec = pow(specness, 32);  //反光度 32次幂
+    vec3 specular = specularStrength * spec * light.specular;
+
+    vec3 result = (diffuse+specular+ambientColor) * outColor;
+    vec4 surfaceColor = texture(tex, fragTexCoord);
+
+    finalColor = vec4(result*surfaceColor.rgb, surfaceColor.a);
+}
